@@ -20,7 +20,7 @@ public class Ganitor.CandidateFileRow : Adw.ActionRow {
     construct {
         title = Path.get_basename (candidate.path);
         subtitle = "%s — modified %s".printf (
-            relative_directory (),
+            PathDisplay.relative_parent_directory (scan_root, candidate.file),
             candidate.modified_time.format ("%Y-%m-%d %H:%M")
         );
 
@@ -40,19 +40,5 @@ public class Ganitor.CandidateFileRow : Adw.ActionRow {
         check.toggled.connect (() => selection_toggled ());
         add_prefix (check);
         activatable_widget = check;
-    }
-
-    private string relative_directory () {
-        var relative = scan_root.get_relative_path (candidate.file);
-        if (relative == null) {
-            return Path.get_dirname (candidate.path);
-        }
-
-        var relative_dir = Path.get_dirname (relative);
-        if (relative_dir == ".") {
-            return Path.get_basename (scan_root.get_path () ?? scan_root.get_parse_name ());
-        }
-
-        return relative_dir;
     }
 }

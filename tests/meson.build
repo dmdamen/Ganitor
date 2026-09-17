@@ -37,3 +37,24 @@ test_trash_operation = executable(
   dependencies: [libganitor_engine_dep],
 )
 test('trash-operation', test_trash_operation)
+
+test_empty_folder = executable(
+  'test-empty-folder',
+  [test_fixtures, 'test-empty-folder.vala'],
+  dependencies: [libganitor_engine_dep],
+)
+test('empty-folder', test_empty_folder)
+
+test_path_display = executable(
+  'test-path-display',
+  [test_fixtures, 'test-path-display.vala'],
+  dependencies: [libganitor_engine_dep],
+)
+test('path-display', test_path_display)
+
+test_empty_folder_scanner = executable(
+  'test-empty-folder-scanner',
+  [test_fixtures, 'test-empty-folder-scanner.vala'],
+  dependencies: [libganitor_engine_dep],
+)
+test('empty-folder-scanner', test_empty_folder_scanner)

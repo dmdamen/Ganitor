@@ -20,8 +20,11 @@ gio_dep = dependency('gio-2.0')
 engine_sources = files(
   'models/candidate-file.vala',
   'models/duplicate-group.vala',
+  'models/empty-folder.vala',
   'models/selection-summary.vala',
+  'util/path-display.vala',
   'scanner.vala',
+  'empty-folder-scanner.vala',
   'trash-operation.vala',
 )
 
@@ -57,6 +60,7 @@ app_sources = files(
   'window.vala',
   'widgets/candidate-file-row.vala',
   'widgets/duplicate-group-row.vala',
+  'widgets/empty-folder-row.vala',
 )
 
 executable(

@@ -48,6 +48,23 @@ public class Ganitor.TrashOperation : GLib.Object {
         return result;
     }
 
+    public static File[] selected_folders (ListModel folders) {
+        var matches = new GenericArray<File> ();
+
+        for (uint i = 0; i < folders.get_n_items (); i++) {
+            var folder = (EmptyFolder) folders.get_item (i);
+            if (folder.selected) {
+                matches.add (folder.file);
+            }
+        }
+
+        var result = new File[matches.length];
+        for (uint i = 0; i < matches.length; i++) {
+            result[i] = matches[i];
+        }
+        return result;
+    }
+
     // Trashing is implemented by hand (copy into trash_dir/files, write a
     // .trashinfo record, delete the original) rather than via
     // Gio.File.trash_async(): that call hard-refuses to trash anything on
@@ -71,7 +88,7 @@ public class Ganitor.TrashOperation : GLib.Object {
 
         foreach (var file in files) {
             try {
-                yield trash_file (file, cancellable);
+                yield trash_entry (file, cancellable);
                 succeeded.add (file);
             } catch (Error e) {
                 warning ("failed to trash %s: %s", file.get_uri (), e.message);
@@ -102,17 +119,27 @@ public class Ganitor.TrashOperation : GLib.Object {
         }
     }
 
-    private async void trash_file (File file, Cancellable cancellable) throws Error {
+    // Handles both files and empty directories: Gio.File.copy_async()
+    // refuses to copy a directory source outright (it doesn't recurse), but
+    // since a directory reaching this method is always empty (the only
+    // caller for directories is the empty-folder cleanup phase), creating
+    // an equivalent empty directory at the destination is sufficient.
+    private async void trash_entry (File file, Cancellable cancellable) throws Error {
         var basename = file.get_basename () ?? "file";
         var destination = pick_unique_destination (basename, cancellable);
+        var file_type = file.query_file_type (FileQueryInfoFlags.NOFOLLOW_SYMLINKS, cancellable);
 
-        yield file.copy_async (
-            destination,
-            FileCopyFlags.NONE,
-            Priority.DEFAULT,
-            cancellable,
-            null
-        );
+        if (file_type == FileType.DIRECTORY) {
+            yield destination.make_directory_async (Priority.DEFAULT, cancellable);
+        } else {
+            yield file.copy_async (
+                destination,
+                FileCopyFlags.NONE,
+                Priority.DEFAULT,
+                cancellable,
+                null
+            );
+        }
 
         yield write_trashinfo (destination.get_basename (), file, cancellable);
         yield file.delete_async (Priority.DEFAULT, cancellable);

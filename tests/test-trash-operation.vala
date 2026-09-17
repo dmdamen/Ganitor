@@ -88,6 +88,29 @@ void test_trash_operation_selected_files_does_not_require_a_native_path () {
     assert (files[0].equal (included));
 }
 
+void test_trash_operation_selected_folders_filters_by_selection () {
+    var included = new Ganitor.EmptyFolder (File.new_for_path ("/scan/root/included"));
+    var excluded = new Ganitor.EmptyFolder (File.new_for_path ("/scan/root/excluded"));
+    included.selected = true;
+
+    var folders = new ListStore (typeof (Ganitor.EmptyFolder));
+    folders.append (included);
+    folders.append (excluded);
+
+    var files = Ganitor.TrashOperation.selected_folders (folders);
+
+    assert (files.length == 1);
+    assert (files[0].equal (included.file));
+}
+
+void test_trash_operation_selected_folders_empty_when_nothing_selected () {
+    var folders = new ListStore (typeof (Ganitor.EmptyFolder));
+    folders.append (new Ganitor.EmptyFolder (File.new_for_path ("/scan/root/a")));
+
+    var files = Ganitor.TrashOperation.selected_folders (folders);
+    assert (files.length == 0);
+}
+
 Ganitor.TrashResult run_trash_sync (Ganitor.TrashOperation op, File[] files) {
     var loop = new MainLoop ();
     Ganitor.TrashResult result = Ganitor.TrashResult () { succeeded_files = {}, failed_files = {} };
@@ -175,12 +198,40 @@ void test_trash_operation_run_resolves_filename_collisions () {
     remove_fixture_dir_recursive (trash_root);
 }
 
+void test_trash_operation_run_moves_an_empty_folder_into_trash () {
+    var source_root = make_fixture_dir ();
+    var empty_folder = Path.build_filename (source_root, "empty");
+    DirUtils.create (empty_folder, 0755);
+    var folder_file = File.new_for_path (empty_folder);
+
+    var trash_root = make_fixture_dir ();
+    var trash_dir = File.new_for_path (Path.build_filename (trash_root, "Trash"));
+
+    var op = new Ganitor.TrashOperation (trash_dir);
+    var result = run_trash_sync (op, new File[] { folder_file });
+
+    assert (result.succeeded_files.length == 1);
+    assert (result.failed_files.length == 0);
+    assert (!folder_file.query_exists ());
+
+    var trashed = trash_dir.get_child ("files").get_child ("empty");
+    assert (trashed.query_exists ());
+    assert (trashed.query_file_type (FileQueryInfoFlags.NONE) == FileType.DIRECTORY);
+    assert (trash_dir.get_child ("info").get_child ("empty.trashinfo").query_exists ());
+
+    remove_fixture_dir_recursive (source_root);
+    remove_fixture_dir_recursive (trash_root);
+}
+
 int main (string[] args) {
     Test.init (ref args);
     Test.add_func ("/trash-operation/selected-files-filters-by-selection", test_trash_operation_selected_files_filters_by_selection);
     Test.add_func ("/trash-operation/selected-files-empty-when-nothing-selected", test_trash_operation_selected_files_empty_when_nothing_selected);
     Test.add_func ("/trash-operation/selected-files-does-not-require-a-native-path", test_trash_operation_selected_files_does_not_require_a_native_path);
+    Test.add_func ("/trash-operation/selected-folders-filters-by-selection", test_trash_operation_selected_folders_filters_by_selection);
+    Test.add_func ("/trash-operation/selected-folders-empty-when-nothing-selected", test_trash_operation_selected_folders_empty_when_nothing_selected);
     Test.add_func ("/trash-operation/run-copies-into-trash-and-writes-trashinfo", test_trash_operation_run_copies_into_trash_and_writes_trashinfo);
     Test.add_func ("/trash-operation/run-resolves-filename-collisions", test_trash_operation_run_resolves_filename_collisions);
+    Test.add_func ("/trash-operation/run-moves-an-empty-folder-into-trash", test_trash_operation_run_moves_an_empty_folder_into_trash);
     return Test.run ();
 }
