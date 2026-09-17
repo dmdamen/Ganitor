@@ -16,6 +16,10 @@ public class Ganitor.TrashOperation : GLib.Object {
             for (uint j = 0; j < group.files.get_n_items (); j++) {
                 var candidate = (CandidateFile) group.files.get_item (j);
                 if (candidate.selected) {
+                    if (candidate.file == null) {
+                        warning ("selected_files: candidate.file is null, skipping");
+                        continue;
+                    }
                     matches.add (candidate.file);
                 }
             }
@@ -37,6 +41,7 @@ public class Ganitor.TrashOperation : GLib.Object {
                 yield file.trash_async (Priority.DEFAULT, cancellable);
                 succeeded++;
             } catch (Error e) {
+                warning ("trash_async failed for %s: %s", file.get_uri (), e.message);
                 failed.add (file);
             }
         }

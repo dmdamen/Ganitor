@@ -194,6 +194,13 @@ public class Ganitor.Window : Adw.ApplicationWindow {
             return;
         }
 
+        // Temporary diagnostics while tracking down a crash where a File
+        // entry in this array turned up null by the time the async trash
+        // operation completed. Safe to remove once root-caused.
+        foreach (var f in files) {
+            warning ("on_trash_clicked: selected %s", f == null ? "NULL" : f.get_uri ());
+        }
+
         var dialog = new Adw.AlertDialog (
             "Move %u Files to Trash?".printf (summary.count),
             "These files (%s) will be moved to the Trash. You can restore them from there if needed.".printf (
@@ -215,9 +222,16 @@ public class Ganitor.Window : Adw.ApplicationWindow {
     }
 
     private void perform_trash (File[] files) {
+        // Guard against a second trash operation overlapping this one (e.g.
+        // a rapid double-click) — re-enabled once this one finishes.
+        trash_button.sensitive = false;
+
         var op = new TrashOperation ();
         op.run.begin (files, new Cancellable (), (obj, res) => {
             var result = op.run.end (res);
+            foreach (var f in files) {
+                warning ("perform_trash callback: %s", f == null ? "NULL" : f.get_uri ());
+            }
             apply_trash_result (files, result);
         });
     }
@@ -225,10 +239,18 @@ public class Ganitor.Window : Adw.ApplicationWindow {
     private void apply_trash_result (File[] attempted_files, TrashResult result) {
         var failed = new HashTable<File, bool> ((f) => f.hash (), (a, b) => a.equal (b));
         foreach (var file in result.failed_files) {
+            if (file == null) {
+                warning ("apply_trash_result: null entry in result.failed_files, skipping");
+                continue;
+            }
             failed.insert (file, true);
         }
 
         foreach (var file in attempted_files) {
+            if (file == null) {
+                warning ("apply_trash_result: null entry in attempted_files, skipping");
+                continue;
+            }
             if (!failed.contains (file)) {
                 remove_candidate_by_file (file);
             }
