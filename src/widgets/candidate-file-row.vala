@@ -27,9 +27,14 @@ public class Ganitor.CandidateFileRow : Adw.ActionRow {
         var check = new Gtk.CheckButton () {
             valign = Gtk.Align.CENTER,
         };
-        check.bind_property (
-            "active",
-            candidate, "selected",
+        // SYNC_CREATE copies the *source* property's value into the target
+        // at bind time, so candidate.selected (already set by
+        // auto_select_duplicates()) must be the source here — binding it the
+        // other way round would immediately overwrite it with the checkbox's
+        // default unchecked state.
+        candidate.bind_property (
+            "selected",
+            check, "active",
             BindingFlags.BIDIRECTIONAL | BindingFlags.SYNC_CREATE
         );
         check.toggled.connect (() => selection_toggled ());
