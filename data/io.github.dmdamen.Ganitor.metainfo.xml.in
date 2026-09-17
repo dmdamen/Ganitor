@@ -14,6 +14,12 @@
   </description>
   <launchable type="desktop-id">io.github.dmdamen.Ganitor.desktop</launchable>
   <content_rating type="oars-1.1"/>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/dmdamen/Ganitor/master/data/screenshots/results.png</image>
+      <caption>Reviewing duplicate file groups found in a folder</caption>
+    </screenshot>
+  </screenshots>
   <releases>
     <release version="0.1.0" date="2026-09-17">
       <description>
@@ -22,6 +28,8 @@
     </release>
   </releases>
   <url type="homepage">https://github.com/dmdamen/Ganitor</url>
+  <url type="bugtracker">https://github.com/dmdamen/Ganitor/issues</url>
+  <url type="vcs-browser">https://github.com/dmdamen/Ganitor</url>
   <developer id="io.github.dmdamen">
     <name>Dennis</name>
   </developer>

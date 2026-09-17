@@ -25,8 +25,10 @@
             "buildsystem": "meson",
             "sources": [
                 {
-                    "type": "dir",
-                    "path": "../.."
+                    "type": "git",
+                    "url": "https://github.com/dmdamen/Ganitor.git",
+                    "tag": "v0.1.0",
+                    "commit": "fd3891d1b3df4c919ed9818c4371b55c61344d76"
                 }
             ]
         }
