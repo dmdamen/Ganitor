@@ -62,9 +62,13 @@ public class Ganitor.Window : Adw.ApplicationWindow {
             title = "Select a Folder to Scan",
         };
 
+        // Stored/restored as a URI, not a path: File.get_path() can be null
+        // for some backends (e.g. certain Flatpak document-portal folders),
+        // but get_uri()/new_for_uri() work for any Gio.File regardless of
+        // backend.
         var last_folder = settings.get_string ("last-folder");
         if (last_folder != "") {
-            var dir = File.new_for_path (last_folder);
+            var dir = File.new_for_uri (last_folder);
             if (dir.query_exists ()) {
                 dialog.initial_folder = dir;
             }
@@ -78,7 +82,7 @@ public class Ganitor.Window : Adw.ApplicationWindow {
                 return;
             }
 
-            settings.set_string ("last-folder", folder.get_path ());
+            settings.set_string ("last-folder", folder.get_uri ());
             start_scan (folder);
         });
     }
@@ -185,8 +189,8 @@ public class Ganitor.Window : Adw.ApplicationWindow {
 
     private void on_trash_clicked () {
         var summary = SelectionSummary.compute (scanner.groups);
-        var paths = TrashOperation.selected_paths (scanner.groups);
-        if (paths.length == 0) {
+        var files = TrashOperation.selected_files (scanner.groups);
+        if (files.length == 0) {
             return;
         }
 
@@ -205,28 +209,28 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         dialog.choose.begin (this, null, (obj, res) => {
             var response = dialog.choose.end (res);
             if (response == "trash") {
-                perform_trash (paths);
+                perform_trash (files);
             }
         });
     }
 
-    private void perform_trash (string[] paths) {
+    private void perform_trash (File[] files) {
         var op = new TrashOperation ();
-        op.run.begin (paths, new Cancellable (), (obj, res) => {
+        op.run.begin (files, new Cancellable (), (obj, res) => {
             var result = op.run.end (res);
-            apply_trash_result (paths, result);
+            apply_trash_result (files, result);
         });
     }
 
-    private void apply_trash_result (string[] attempted_paths, TrashResult result) {
-        var failed = new HashTable<string, bool> (str_hash, str_equal);
-        foreach (var path in result.failed_paths) {
-            failed.insert (path, true);
+    private void apply_trash_result (File[] attempted_files, TrashResult result) {
+        var failed = new HashTable<File, bool> ((f) => f.hash (), (a, b) => a.equal (b));
+        foreach (var file in result.failed_files) {
+            failed.insert (file, true);
         }
 
-        foreach (var path in attempted_paths) {
-            if (!failed.contains (path)) {
-                remove_candidate_by_path (path);
+        foreach (var file in attempted_files) {
+            if (!failed.contains (file)) {
+                remove_candidate_by_file (file);
             }
         }
 
@@ -237,9 +241,9 @@ public class Ganitor.Window : Adw.ApplicationWindow {
             view_stack.visible_child_name = "no-duplicates";
         }
 
-        if (result.failed_paths.length > 0) {
+        if (result.failed_files.length > 0) {
             toast_overlay.add_toast (new Adw.Toast (
-                "Moved %u files to Trash, %u failed".printf (result.succeeded, result.failed_paths.length)
+                "Moved %u files to Trash, %u failed".printf (result.succeeded, result.failed_files.length)
             ));
         } else {
             toast_overlay.add_toast (new Adw.Toast (
@@ -248,12 +252,12 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         }
     }
 
-    private void remove_candidate_by_path (string path) {
+    private void remove_candidate_by_file (File file) {
         for (uint i = 0; i < scanner.groups.get_n_items (); i++) {
             var group = (DuplicateGroup) scanner.groups.get_item (i);
             for (uint j = 0; j < group.files.get_n_items (); j++) {
                 var candidate = (CandidateFile) group.files.get_item (j);
-                if (candidate.path == path) {
+                if (candidate.file.equal (file)) {
                     group.files.remove (j);
                     if (group.files.get_n_items () < 2) {
                         scanner.groups.remove (i);

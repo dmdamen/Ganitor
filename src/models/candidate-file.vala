@@ -5,8 +5,12 @@ public class Ganitor.CandidateFile : GLib.Object {
     public string? checksum { get; set; default = null; }
     public bool selected { get; set; default = false; }
 
+    // Gio.File.get_path() returns null for some backends (confirmed for at
+    // least one Flatpak document-portal case). get_parse_name() always
+    // returns a usable display string regardless of backend, so it's the
+    // fallback rather than letting null reach display code.
     public string path {
-        owned get { return file.get_path (); }
+        owned get { return file.get_path () ?? file.get_parse_name (); }
     }
 
     public CandidateFile (File file, FileInfo info) {
