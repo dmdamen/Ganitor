@@ -21,6 +21,7 @@ public class Ganitor.Window : Adw.ApplicationWindow {
 
     private Settings settings;
     private DuplicateScanner? scanner;
+    private File? current_scan_root;
     private Cancellable? scan_cancellable;
     private uint scan_error_count;
     private StringBuilder scan_error_text;
@@ -87,6 +88,7 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         scan_error_text = new StringBuilder ();
 
         scanner = new DuplicateScanner ();
+        current_scan_root = folder;
         scan_cancellable = new Cancellable ();
 
         scanner.progress.connect (on_scan_progress);
@@ -170,7 +172,7 @@ public class Ganitor.Window : Adw.ApplicationWindow {
 
     private Gtk.Widget create_group_row_widget (Object item) {
         var group = (DuplicateGroup) item;
-        var row = new DuplicateGroupRow (group);
+        var row = new DuplicateGroupRow (group, current_scan_root);
         row.selection_toggled.connect (update_trash_button);
         return row;
     }

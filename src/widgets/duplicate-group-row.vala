@@ -1,10 +1,11 @@
 public class Ganitor.DuplicateGroupRow : Adw.ExpanderRow {
     public DuplicateGroup group { get; construct; }
+    public File scan_root { get; construct; }
 
     public signal void selection_toggled ();
 
-    public DuplicateGroupRow (DuplicateGroup group) {
-        Object (group: group);
+    public DuplicateGroupRow (DuplicateGroup group, File scan_root) {
+        Object (group: group, scan_root: scan_root);
     }
 
     construct {
@@ -18,7 +19,7 @@ public class Ganitor.DuplicateGroupRow : Adw.ExpanderRow {
 
         for (uint i = 0; i < count; i++) {
             var candidate = (CandidateFile) group.files.get_item (i);
-            var row = new CandidateFileRow (candidate);
+            var row = new CandidateFileRow (candidate, scan_root);
             row.selection_toggled.connect (() => selection_toggled ());
             add_row (row);
         }
