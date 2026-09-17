@@ -4,12 +4,23 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>Ganitor</name>
-  <summary>Find and remove duplicate files</summary>
+  <summary>Find and remove duplicate files, without the clutter</summary>
   <description>
     <p>
-      Ganitor scans a folder for duplicate files by comparing file size and
-      content, then lets you review and move the duplicates you no longer
-      need to the trash.
+      Ganitor keeps your personal files clean and organized by finding
+      duplicate copies and letting you remove them — nothing more, nothing
+      less.
+    </p>
+    <p>
+      Point it at a folder and Ganitor compares files by their actual
+      content, not just the name, so it catches true duplicates even if
+      they've been renamed or moved. Review what it found — the extra
+      copies are already pre-selected for you — and confirm to send them
+      to the trash. Nothing is deleted without your say-so.
+    </p>
+    <p>
+      No settings dialog with a hundred options. No background services.
+      No accounts. Just point it at a folder and clean up.
     </p>
   </description>
   <launchable type="desktop-id">io.github.dmdamen.Ganitor.desktop</launchable>

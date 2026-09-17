@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Ganitor
-Comment=Find and remove duplicate files
+Comment=Find and remove duplicate files, without the clutter
 Exec=ganitor
 Icon=io.github.dmdamen.Ganitor
 Terminal=false
