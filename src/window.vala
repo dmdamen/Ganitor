@@ -191,7 +191,15 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         view_stack.visible_child_name = "results";
     }
 
-    private void confirm_and_trash (
+    // Deliberately a real `async` method using `yield` throughout, rather
+    // than `.begin(...)` + a nested callback: capturing an array *parameter*
+    // (`files`) in a closure that reads it later from a non-yield async
+    // callback silently corrupts it - confirmed via two separate crashes
+    // this session, the second one a regression reintroduced by an earlier
+    // version of this exact method. Using `yield` keeps `files` a plain
+    // parameter of one coroutine instead of something captured across a
+    // callback boundary.
+    private async void confirm_and_trash (
         File[] files,
         string heading,
         string body,
@@ -209,23 +217,16 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         dialog.default_response = "cancel";
         dialog.close_response = "cancel";
 
-        dialog.choose.begin (this, null, (obj, res) => {
-            if (dialog.choose.end (res) != "trash") {
-                return;
-            }
+        var response = yield dialog.choose (this, null);
+        if (response != "trash") {
+            return;
+        }
 
-            trash_button.sensitive = false;
-            var op = new TrashOperation ();
-            // on_done only needs the result, not `files` itself: capturing
-            // an array *parameter* and reading it from a run.begin(...)
-            // callback (rather than via `yield` inside an actual async
-            // method) silently corrupted it in a real, confirmed crash.
-            op.run.begin (files, new Cancellable (), (obj2, res2) => {
-                var result = op.run.end (res2);
-                show_trash_result_toast (result, noun_plural);
-                on_done (result);
-            });
-        });
+        trash_button.sensitive = false;
+        var op = new TrashOperation ();
+        var result = yield op.run (files, new Cancellable ());
+        show_trash_result_toast (result, noun_plural);
+        on_done (result);
     }
 
     private void show_trash_result_toast (TrashResult result, string noun_plural) {
@@ -321,7 +322,7 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         var summary = SelectionSummary.compute (scanner.groups);
         var files = TrashOperation.selected_files (scanner.groups);
 
-        confirm_and_trash (
+        confirm_and_trash.begin (
             files,
             "Move %u Files to Trash?".printf (summary.count),
             "These files (%s) will be moved to the Trash. You can restore them from there if needed.".printf (
@@ -431,7 +432,7 @@ public class Ganitor.Window : Adw.ApplicationWindow {
     private void on_trash_empty_folder_clicked () {
         var files = TrashOperation.selected_folders (empty_folder_scanner.folders);
 
-        confirm_and_trash (
+        confirm_and_trash.begin (
             files,
             "Move %u Empty Folders to Trash?".printf (files.length),
             "These folders will be moved to the Trash. You can restore them from there if needed.",
