@@ -22,6 +22,12 @@
       No settings dialog with a hundred options. No background services.
       No accounts. Just point it at a folder and clean up.
     </p>
+    <p>
+      This application was built entirely by an AI coding assistant
+      (Claude, by Anthropic), directed and reviewed by the developer. All
+      code, tests, and this Flatpak packaging were AI-generated rather
+      than hand-written.
+    </p>
   </description>
   <launchable type="desktop-id">io.github.dmdamen.Ganitor.desktop</launchable>
   <content_rating type="oars-1.1"/>

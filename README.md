@@ -7,6 +7,12 @@ Ganitor scans a folder you choose, groups files first by size and then by a
 SHA-256 content hash, and shows you the resulting duplicate groups so you can
 select which copies to move to the trash.
 
+## AI disclosure
+
+This application was built entirely by an AI coding assistant (Claude, by
+Anthropic), directed and reviewed by the developer. All code, tests, and the
+Flatpak packaging were AI-generated rather than hand-written.
+
 ## Building
 
 ```sh
