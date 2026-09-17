@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="io.github.dmdamen.Ganitor" path="/io/github/dmdamen/Ganitor/">
+    <key name="last-folder" type="s">
+      <default>''</default>
+      <summary>Last scanned folder</summary>
+      <description>The most recently selected folder to scan for duplicates.</description>
+    </key>
+    <key name="window-width" type="i">
+      <default>720</default>
+      <summary>Window width</summary>
+    </key>
+    <key name="window-height" type="i">
+      <default>560</default>
+      <summary>Window height</summary>
+    </key>
+    <key name="window-maximized" type="b">
+      <default>false</default>
+      <summary>Window maximized state</summary>
+    </key>
+  </schema>
+</schemalist>

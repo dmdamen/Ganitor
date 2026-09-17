@@ -1,0 +1,6 @@
+_build/
+build/
+build-*/
+!/build-aux/
+.flatpak-builder/
+*.swp

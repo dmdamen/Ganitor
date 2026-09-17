@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Ganitor
+Comment=Find and remove duplicate files
+Exec=ganitor
+Icon=io.github.dmdamen.Ganitor
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Utility;FileTools;
+Keywords=duplicate;files;cleanup;disk;
+StartupNotify=true

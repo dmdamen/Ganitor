@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.dmdamen.Ganitor</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Ganitor</name>
+  <summary>Find and remove duplicate files</summary>
+  <description>
+    <p>
+      Ganitor scans a folder for duplicate files by comparing file size and
+      content, then lets you review and move the duplicates you no longer
+      need to the trash.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.dmdamen.Ganitor.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-09-17">
+      <description>
+        <p>Initial release.</p>
+      </description>
+    </release>
+  </releases>
+  <url type="homepage">https://github.com/dmdamen/Ganitor</url>
+  <developer id="io.github.dmdamen">
+    <name>Dennis</name>
+  </developer>
+</component>
