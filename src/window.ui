@@ -22,6 +22,12 @@
                 </style>
               </object>
             </child>
+            <child type="end">
+              <object class="GtkButton" id="skip_button">
+                <property name="label" translatable="yes">Skip</property>
+                <property name="visible">false</property>
+              </object>
+            </child>
           </object>
         </child>
         <property name="content">
@@ -110,7 +116,7 @@
                 </child>
                 <child>
                   <object class="AdwViewStackPage">
-                    <property name="name">no-duplicates</property>
+                    <property name="name">all-clean</property>
                     <property name="child">
                       <object class="AdwStatusPage" id="all_clean_page">
                         <property name="icon-name">emblem-ok-symbolic</property>
