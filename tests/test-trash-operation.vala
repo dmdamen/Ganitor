@@ -114,20 +114,21 @@ void test_trash_operation_run_moves_selected_files_to_real_trash () {
 
     var op = new Ganitor.TrashOperation ();
     var loop = new MainLoop ();
-    Ganitor.TrashResult result = Ganitor.TrashResult () { succeeded = 0, failed_files = {} };
+    Ganitor.TrashResult result = Ganitor.TrashResult () { succeeded_files = {}, failed_files = {} };
     op.run.begin (new File[] { candidate.file }, new Cancellable (), (obj, res) => {
         result = op.run.end (res);
         loop.quit ();
     });
     loop.run ();
 
-    if (result.succeeded == 0) {
+    if (result.succeeded_files.length == 0) {
         Test.skip ("trash_async() not supported for this fixture location in this environment");
         remove_fixture_dir_recursive (dir);
         return;
     }
 
-    assert (result.succeeded == 1);
+    assert (result.succeeded_files.length == 1);
+    assert (result.succeeded_files[0].equal (candidate.file));
     assert (result.failed_files.length == 0);
     assert (!candidate.file.query_exists ());
 

@@ -194,13 +194,6 @@ public class Ganitor.Window : Adw.ApplicationWindow {
             return;
         }
 
-        // Temporary diagnostics while tracking down a crash where a File
-        // entry in this array turned up null by the time the async trash
-        // operation completed. Safe to remove once root-caused.
-        foreach (var f in files) {
-            warning ("on_trash_clicked: selected %s", f == null ? "NULL" : f.get_uri ());
-        }
-
         var dialog = new Adw.AlertDialog (
             "Move %u Files to Trash?".printf (summary.count),
             "These files (%s) will be moved to the Trash. You can restore them from there if needed.".printf (
@@ -227,33 +220,22 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         trash_button.sensitive = false;
 
         var op = new TrashOperation ();
+        // apply_trash_result only needs the result, not the `files` this
+        // callback closes over: capturing an array *parameter* and then
+        // reading its contents from within a run.begin(...) callback
+        // (rather than via `yield` inside an actual async method) turned
+        // out to silently corrupt it - confirmed via a coredump showing the
+        // captured array's length reading back as 0 here, causing a crash.
+        // TrashOperation.run() now reports succeeded/failed files directly
+        // in TrashResult instead, sidestepping that pattern entirely.
         op.run.begin (files, new Cancellable (), (obj, res) => {
-            var result = op.run.end (res);
-            foreach (var f in files) {
-                warning ("perform_trash callback: %s", f == null ? "NULL" : f.get_uri ());
-            }
-            apply_trash_result (files, result);
+            apply_trash_result (op.run.end (res));
         });
     }
 
-    private void apply_trash_result (File[] attempted_files, TrashResult result) {
-        var failed = new HashTable<File, bool> ((f) => f.hash (), (a, b) => a.equal (b));
-        foreach (var file in result.failed_files) {
-            if (file == null) {
-                warning ("apply_trash_result: null entry in result.failed_files, skipping");
-                continue;
-            }
-            failed.insert (file, true);
-        }
-
-        foreach (var file in attempted_files) {
-            if (file == null) {
-                warning ("apply_trash_result: null entry in attempted_files, skipping");
-                continue;
-            }
-            if (!failed.contains (file)) {
-                remove_candidate_by_file (file);
-            }
+    private void apply_trash_result (TrashResult result) {
+        foreach (var file in result.succeeded_files) {
+            remove_candidate_by_file (file);
         }
 
         update_summary_label ();
@@ -265,11 +247,11 @@ public class Ganitor.Window : Adw.ApplicationWindow {
 
         if (result.failed_files.length > 0) {
             toast_overlay.add_toast (new Adw.Toast (
-                "Moved %u files to Trash, %u failed".printf (result.succeeded, result.failed_files.length)
+                "Moved %u files to Trash, %u failed".printf (result.succeeded_files.length, result.failed_files.length)
             ));
         } else {
             toast_overlay.add_toast (new Adw.Toast (
-                "Moved %u files to Trash".printf (result.succeeded)
+                "Moved %u files to Trash".printf (result.succeeded_files.length)
             ));
         }
     }
