@@ -88,52 +88,91 @@ void test_trash_operation_selected_files_does_not_require_a_native_path () {
     assert (files[0].equal (included));
 }
 
-void remove_from_real_trash (string basename) {
-    var trash_dir = File.new_for_uri ("trash:///");
-    try {
-        var enumerator = trash_dir.enumerate_children ("standard::name", FileQueryInfoFlags.NONE);
-        FileInfo? info;
-        while ((info = enumerator.next_file ()) != null) {
-            if (info.get_name () == basename) {
-                try {
-                    trash_dir.get_child (info.get_name ()).delete ();
-                } catch (Error e) {
-                    // best-effort cleanup only
-                }
-            }
-        }
-    } catch (Error e) {
-        // best-effort cleanup only
-    }
-}
-
-void test_trash_operation_run_moves_selected_files_to_real_trash () {
-    var dir = make_home_fixture_dir ();
-    var candidate = make_candidate (dir, "victim.txt", "hello");
-    var basename = candidate.file.get_basename ();
-
-    var op = new Ganitor.TrashOperation ();
+Ganitor.TrashResult run_trash_sync (Ganitor.TrashOperation op, File[] files) {
     var loop = new MainLoop ();
     Ganitor.TrashResult result = Ganitor.TrashResult () { succeeded_files = {}, failed_files = {} };
-    op.run.begin (new File[] { candidate.file }, new Cancellable (), (obj, res) => {
+    op.run.begin (files, new Cancellable (), (obj, res) => {
         result = op.run.end (res);
         loop.quit ();
     });
     loop.run ();
+    return result;
+}
 
-    if (result.succeeded_files.length == 0) {
-        Test.skip ("trash_async() not supported for this fixture location in this environment");
-        remove_fixture_dir_recursive (dir);
-        return;
+string read_file_contents (File file) {
+    try {
+        uint8[] contents;
+        file.load_contents (null, out contents, null);
+        return (string) contents;
+    } catch (Error e) {
+        error ("failed to read %s: %s", file.get_path (), e.message);
     }
+}
+
+// Ganitor never gets a real host path for scanned files under the
+// portal-only sandbox (Gio.File.trash_async() hard-refuses to trash
+// anything on the document-portal's FUSE mount - confirmed via a real
+// crash investigation), so trashing is implemented manually: copy the
+// file into a Trash directory, write .trashinfo, then delete the
+// original. These tests inject a scratch directory as that Trash
+// directory instead of touching the real ~/.local/share/Trash.
+
+void test_trash_operation_run_copies_into_trash_and_writes_trashinfo () {
+    var source_dir = make_fixture_dir ();
+    var trash_root = make_fixture_dir ();
+    var trash_dir = File.new_for_path (Path.build_filename (trash_root, "Trash"));
+
+    var source_file = make_fixture_file (source_dir, "victim.txt", "hello world");
+
+    var op = new Ganitor.TrashOperation (trash_dir);
+    var result = run_trash_sync (op, new File[] { source_file });
 
     assert (result.succeeded_files.length == 1);
-    assert (result.succeeded_files[0].equal (candidate.file));
     assert (result.failed_files.length == 0);
-    assert (!candidate.file.query_exists ());
+    assert (!source_file.query_exists ());
 
-    remove_from_real_trash (basename);
-    remove_fixture_dir_recursive (dir);
+    var trashed_file = trash_dir.get_child ("files").get_child ("victim.txt");
+    assert (trashed_file.query_exists ());
+    assert (read_file_contents (trashed_file) == "hello world");
+
+    var trashinfo = trash_dir.get_child ("info").get_child ("victim.txt.trashinfo");
+    assert (trashinfo.query_exists ());
+    var trashinfo_content = read_file_contents (trashinfo);
+    assert (trashinfo_content.contains ("[Trash Info]"));
+    assert (trashinfo_content.contains ("DeletionDate="));
+
+    remove_fixture_dir_recursive (source_dir);
+    remove_fixture_dir_recursive (trash_root);
+}
+
+void test_trash_operation_run_resolves_filename_collisions () {
+    var trash_root = make_fixture_dir ();
+    var trash_dir = File.new_for_path (Path.build_filename (trash_root, "Trash"));
+
+    var dir1 = make_fixture_dir ();
+    var dir2 = make_fixture_dir ();
+    var file1 = make_fixture_file (dir1, "dup.txt", "one");
+    var file2 = make_fixture_file (dir2, "dup.txt", "two");
+
+    var op = new Ganitor.TrashOperation (trash_dir);
+    var result = run_trash_sync (op, new File[] { file1, file2 });
+
+    assert (result.succeeded_files.length == 2);
+    assert (result.failed_files.length == 0);
+
+    var files_dir = trash_dir.get_child ("files");
+    var first = files_dir.get_child ("dup.txt");
+    var second = files_dir.get_child ("dup_1.txt");
+    assert (first.query_exists ());
+    assert (second.query_exists ());
+    assert (read_file_contents (first) == "one");
+    assert (read_file_contents (second) == "two");
+    assert (trash_dir.get_child ("info").get_child ("dup.txt.trashinfo").query_exists ());
+    assert (trash_dir.get_child ("info").get_child ("dup_1.txt.trashinfo").query_exists ());
+
+    remove_fixture_dir_recursive (dir1);
+    remove_fixture_dir_recursive (dir2);
+    remove_fixture_dir_recursive (trash_root);
 }
 
 int main (string[] args) {
@@ -141,6 +180,7 @@ int main (string[] args) {
     Test.add_func ("/trash-operation/selected-files-filters-by-selection", test_trash_operation_selected_files_filters_by_selection);
     Test.add_func ("/trash-operation/selected-files-empty-when-nothing-selected", test_trash_operation_selected_files_empty_when_nothing_selected);
     Test.add_func ("/trash-operation/selected-files-does-not-require-a-native-path", test_trash_operation_selected_files_does_not_require_a_native_path);
-    Test.add_func ("/trash-operation/run-moves-selected-files-to-real-trash", test_trash_operation_run_moves_selected_files_to_real_trash);
+    Test.add_func ("/trash-operation/run-copies-into-trash-and-writes-trashinfo", test_trash_operation_run_copies_into_trash_and_writes_trashinfo);
+    Test.add_func ("/trash-operation/run-resolves-filename-collisions", test_trash_operation_run_resolves_filename_collisions);
     return Test.run ();
 }
