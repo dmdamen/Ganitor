@@ -199,8 +199,17 @@ public class Ganitor.Window : Adw.ApplicationWindow {
     // version of this exact method. Using `yield` keeps `files` a plain
     // parameter of one coroutine instead of something captured across a
     // callback boundary.
+    //
+    // `files` must be `owned`: without it, Vala treats the parameter as
+    // borrowed, so the caller's generated cleanup code frees (and unrefs
+    // every element of) its own `files` array right after this call starts
+    // the coroutine - while this method is still suspended mid-flight,
+    // long before it actually reaches the `foreach` that uses `files`.
+    // Confirmed via a coredump: the array's length survived correctly but
+    // every element was a dangling, already-unreffed pointer. `on_done` is
+    // already correctly `owned` for the same reason.
     private async void confirm_and_trash (
-        File[] files,
+        owned File[] files,
         string heading,
         string body,
         string noun_plural,
