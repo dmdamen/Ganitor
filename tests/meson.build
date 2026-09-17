@@ -17,13 +17,6 @@ test_duplicate_group = executable(
 )
 test('duplicate-group', test_duplicate_group)
 
-test_format = executable(
-  'test-format',
-  'test-format.vala',
-  dependencies: [libganitor_engine_dep],
-)
-test('format', test_format)
-
 test_selection_summary = executable(
   'test-selection-summary',
   [test_fixtures, 'test-selection-summary.vala'],

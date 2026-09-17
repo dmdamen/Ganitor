@@ -99,7 +99,6 @@ public class Ganitor.Window : Adw.ApplicationWindow {
         groups_list.bind_model (scanner.groups, create_group_row_widget);
 
         trash_button.sensitive = false;
-        trash_button.label = Format.button_label ();
 
         progress_bar.fraction = 0;
         view_stack.visible_child_name = "scanning";
@@ -181,9 +180,7 @@ public class Ganitor.Window : Adw.ApplicationWindow {
     }
 
     private void update_trash_button () {
-        var summary = SelectionSummary.compute (scanner.groups);
-        trash_button.label = Format.button_label ();
-        trash_button.sensitive = summary.count > 0;
+        trash_button.sensitive = SelectionSummary.compute (scanner.groups).count > 0;
     }
 
     private void on_trash_clicked () {

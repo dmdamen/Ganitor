@@ -15,7 +15,7 @@
             </child>
             <child type="end">
               <object class="GtkButton" id="trash_button">
-                <property name="label" translatable="yes">Move to Trash</property>
+                <property name="label" translatable="yes">Clean</property>
                 <property name="sensitive">false</property>
                 <style>
                   <class name="destructive-action"/>

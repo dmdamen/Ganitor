@@ -14,15 +14,13 @@ glib_dep = dependency('glib-2.0')
 gobject_dep = dependency('gobject-2.0')
 gio_dep = dependency('gio-2.0')
 
-# GTK-free engine: models + scanning + trash orchestration + formatting.
-# Depends only on GLib/GObject/Gio so it can be unit-tested headlessly and
-# reused as-is by the GTK application below. Files are added incrementally
-# as they are implemented (TDD: test first, then the file that satisfies it).
+# GTK-free engine: models, scanning, and trash orchestration. Depends only
+# on GLib/GObject/Gio so it can be unit-tested headlessly and reused as-is
+# by the GTK application below.
 engine_sources = files(
   'models/candidate-file.vala',
   'models/duplicate-group.vala',
   'models/selection-summary.vala',
-  'util/format.vala',
   'scanner.vala',
   'trash-operation.vala',
 )
