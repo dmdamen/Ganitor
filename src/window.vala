@@ -172,8 +172,11 @@ public class Ganitor.Window : Adw.ApplicationWindow {
 
     private Gtk.Widget create_group_row_widget (Object item) {
         var group = (DuplicateGroup) item;
+        group.auto_select_duplicates ();
+
         var row = new DuplicateGroupRow (group, current_scan_root);
         row.selection_toggled.connect (update_trash_button);
+        update_trash_button ();
         return row;
     }
 

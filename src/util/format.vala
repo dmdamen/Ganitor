@@ -1,7 +1,7 @@
 namespace Ganitor.Format {
     public string button_label (Summary summary) {
         if (summary.count == 0) {
-            return "Move to Trash";
+            return "Clean";
         }
 
         var size = GLib.format_size (summary.bytes);

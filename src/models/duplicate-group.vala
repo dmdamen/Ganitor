@@ -24,4 +24,29 @@ public class Ganitor.DuplicateGroup : GLib.Object {
     public void add_file (CandidateFile candidate) {
         files.append (candidate);
     }
+
+    // Keeps the oldest copy unselected (most likely the original) and
+    // selects every other copy for removal, so the UI has a sensible
+    // default the user can review and adjust rather than starting empty.
+    public void auto_select_duplicates () {
+        var count = files.get_n_items ();
+        if (count < 2) {
+            return;
+        }
+
+        uint keep_index = 0;
+        DateTime oldest = ((CandidateFile) files.get_item (0)).modified_time;
+        for (uint i = 1; i < count; i++) {
+            var candidate = (CandidateFile) files.get_item (i);
+            if (candidate.modified_time.compare (oldest) < 0) {
+                oldest = candidate.modified_time;
+                keep_index = i;
+            }
+        }
+
+        for (uint i = 0; i < count; i++) {
+            var candidate = (CandidateFile) files.get_item (i);
+            candidate.selected = (i != keep_index);
+        }
+    }
 }

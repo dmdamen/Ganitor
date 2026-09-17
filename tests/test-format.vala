@@ -1,6 +1,6 @@
 void test_format_button_label_no_selection () {
     var summary = Ganitor.Summary () { count = 0, bytes = 0 };
-    assert (Ganitor.Format.button_label (summary) == "Move to Trash");
+    assert (Ganitor.Format.button_label (summary) == "Clean");
 }
 
 void test_format_button_label_singular () {

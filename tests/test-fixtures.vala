@@ -45,6 +45,17 @@ namespace GanitorTest {
         return new Ganitor.CandidateFile (file, query_info_or_die (file));
     }
 
+    // Builds a FileInfo with a caller-chosen modified time rather than the
+    // real filesystem mtime, so tests of mtime-dependent logic (like
+    // auto-selecting the oldest duplicate) are deterministic instead of
+    // depending on how fast fixture files were written on disk.
+    public Ganitor.CandidateFile make_candidate_with_mtime (string dir, string name, string content, DateTime mtime) {
+        var file = make_fixture_file (dir, name, content);
+        var info = query_info_or_die (file);
+        info.set_modification_date_time (mtime);
+        return new Ganitor.CandidateFile (file, info);
+    }
+
     public void remove_fixture_dir_recursive (string dir_path) {
         var dir = File.new_for_path (dir_path);
         try {
