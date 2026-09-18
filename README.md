@@ -7,6 +7,8 @@ Ganitor scans a folder you choose, groups files first by size and then by a
 SHA-256 content hash, and shows you the resulting duplicate groups so you can
 select which copies to move to the trash.
 
+![Ganitor showing duplicate file groups found in a folder](https://raw.githubusercontent.com/dmdamen/Ganitor/master/data/screenshots/results.png)
+
 ## AI disclosure
 
 This application was built entirely by an AI coding assistant (Claude, by
